@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>🏥 Healthcare Portal</h2>
+            </div>
+            <div class="nav-menu">
+                <span class="user-name">Welcome, {{ session.full_name }}</span>
+                <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="portal-header">
+            <h1>Doctor Dashboard</h1>
+            <p>Review patient data and AI-generated insights</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>{{ patients_data|length }}</h3>
+                <p>Total Reports</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ patients_data|selectattr('health_priority', 'equalto', 'High')|list|length }}</h3>
+                <p>High Priority</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ patients_data|selectattr('health_priority', 'equalto', 'Medium')|list|length }}</h3>
+                <p>Medium Priority</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ patients_data|selectattr('health_priority', 'equalto', 'Low')|list|length }}</h3>
+                <p>Low Priority</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Patient Reports</h2>
+            
+            {% if patients_data %}
+                <div class="table-container">
+                    <table class="patients-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Patient</th>
+                                <th>Age/Gender</th>
+                                <th>Priority</th>
+                                <th>Symptoms</th>
+                                <th>AI Summary</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for data in patients_data %}
+                                <tr>
+                                    <td>{{ data['submitted_at'][:16] }}</td>
+                                    <td>
+                                        <strong>{{ data['patient_name'] }}</strong><br>
+                                        <small>{{ data['patient_email'] }}</small>
+                                    </td>
+                                    <td>{{ data['age'] }} / {{ data['gender'] }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ data['health_priority'].lower() }}">
+                                            {{ data['health_priority'] }}
+                                        </span>
+                                    </td>
+                                    <td class="symptoms-cell">{{ data['symptoms'][:100] }}...</td>
+                                    <td class="ai-cell">{{ data['ai_summary'][:150] }}...</td>
+                                    <td>
+                                        <button class="btn btn-small" 
+                                                onclick="viewDetails({{ data['id'] }}, 
+                                                '{{ data['patient_name'] }}',
+                                                '{{ data['age'] }}',
+                                                '{{ data['gender'] }}',
+                                                `{{ data['symptoms']|replace('`', '')|replace('\n', ' ') }}`,
+                                                `{{ data['medical_history']|replace('`', '')|replace('\n', ' ') }}`,
+                                                `{{ data['current_medications']|replace('`', '')|replace('\n', ' ') }}`,
+                                                `{{ data['ai_analysis']|replace('`', '')|replace('\n', ' ') }}`,
+                                                '{{ data['health_priority'] }}',
+                                                `{{ data['ai_summary']|replace('`', '')|replace('\n', ' ') }}`,
+                                                '{{ data['file_name'] or '' }}',
+                                                '{{ data['file_path'] or '' }}')">
+                                            View Details
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="empty-state">No patient reports available.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalPatientName"></h2>
+            
+            <div class="modal-section">
+                <h3>Patient Information</h3>
+                <p><strong>Age:</strong> <span id="modalAge"></span></p>
+                <p><strong>Gender:</strong> <span id="modalGender"></span></p>
+            </div>
+
+            <div class="modal-section">
+                <h3>Symptoms</h3>
+                <p id="modalSymptoms"></p>
+            </div>
+
+            <div class="modal-section">
+                <h3>Medical History</h3>
+                <p id="modalHistory"></p>
+            </div>
+
+            <div class="modal-section">
+                <h3>Current Medications</h3>
+                <p id="modalMedications"></p>
+            </div>
+
+            <div class="modal-section ai-section">
+                <h3>AI Analysis</h3>
+                <div class="priority-badge">
+                    Priority Level: <span id="modalPriority" class="badge"></span>
+                </div>
+                <p><strong>Full Analysis:</strong></p>
+                <p id="modalAnalysis"></p>
+                <p><strong>Summary:</strong></p>
+                <p id="modalSummary"></p>
+            </div>
+
+            <div class="modal-section" id="fileSection" style="display: none;">
+                <h3>Uploaded File</h3>
+                <p id="modalFileName"></p>
+            </div>
+
+            <div class="modal-section">
+                <h3>Add Doctor's Note</h3>
+                <form method="POST" action="{{ url_for('add_doctor_note') }}">
+                    <input type="hidden" name="patient_data_id" id="modalDataId">
+                    <textarea name="notes" rows="4" required 
+                              placeholder="Enter your clinical notes and recommendations..."></textarea>
+                    <button type="submit" class="btn btn-primary">Save Note</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

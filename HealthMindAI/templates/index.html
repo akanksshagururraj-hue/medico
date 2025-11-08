@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare Portal - Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>🏥 Healthcare Portal</h2>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="login-container">
+            <h1>Welcome to Healthcare Portal</h1>
+            <p class="subtitle">Human + AI Collaborative Care System</p>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="login-tabs">
+                <button class="tab-btn active" onclick="showTab('patient')">Patient Login</button>
+                <button class="tab-btn" onclick="showTab('doctor')">Doctor Login</button>
+            </div>
+
+            <form method="POST" action="{{ url_for('login') }}" class="login-form" id="patientForm">
+                <input type="hidden" name="role" value="patient">
+                
+                <div class="form-group">
+                    <label for="patient-username">Username</label>
+                    <input type="text" id="patient-username" name="username" required 
+                           placeholder="Enter your username">
+                </div>
+
+                <div class="form-group">
+                    <label for="patient-password">Password</label>
+                    <input type="password" id="patient-password" name="password" required 
+                           placeholder="Enter your password">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Login as Patient</button>
+                
+                <div class="demo-info">
+                    <p><strong>Demo Account:</strong> patient1 / patient123</p>
+                </div>
+            </form>
+
+            <form method="POST" action="{{ url_for('login') }}" class="login-form hidden" id="doctorForm">
+                <input type="hidden" name="role" value="doctor">
+                
+                <div class="form-group">
+                    <label for="doctor-username">Username</label>
+                    <input type="text" id="doctor-username" name="username" required 
+                           placeholder="Enter your username">
+                </div>
+
+                <div class="form-group">
+                    <label for="doctor-password">Password</label>
+                    <input type="password" id="doctor-password" name="password" required 
+                           placeholder="Enter your password">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Login as Doctor</button>
+                
+                <div class="demo-info">
+                    <p><strong>Demo Account:</strong> doctor1 / doctor123</p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

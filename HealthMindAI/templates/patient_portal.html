@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>🏥 Healthcare Portal</h2>
+            </div>
+            <div class="nav-menu">
+                <span class="user-name">Welcome, {{ session.full_name }}</span>
+                <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="portal-header">
+            <h1>Patient Portal</h1>
+            <p>Submit your health information and track your medical records</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="content-grid">
+            <div class="card">
+                <h2>Submit Health Report</h2>
+                <form method="POST" action="{{ url_for('submit_patient_data') }}" 
+                      enctype="multipart/form-data" id="patientDataForm">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="age">Age</label>
+                            <input type="number" id="age" name="age" required min="1" max="120">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="gender">Gender</label>
+                            <select id="gender" name="gender" required>
+                                <option value="">Select...</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="symptoms">Current Symptoms</label>
+                        <textarea id="symptoms" name="symptoms" rows="3" required 
+                                  placeholder="Describe your current symptoms in detail..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="medical_history">Medical History</label>
+                        <textarea id="medical_history" name="medical_history" rows="3" 
+                                  placeholder="Any previous conditions, surgeries, allergies..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="current_medications">Current Medications</label>
+                        <textarea id="current_medications" name="current_medications" rows="2" 
+                                  placeholder="List any medications you are currently taking..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="medical_file">Upload Medical Files (Optional)</label>
+                        <input type="file" id="medical_file" name="medical_file" 
+                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt">
+                        <small>Accepted formats: PDF, JPG, PNG, DOC, DOCX, TXT (Max 16MB)</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Submit Report</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Your Medical Records</h2>
+                
+                {% if records %}
+                    <div class="records-list">
+                        {% for record in records %}
+                            <div class="record-item">
+                                <div class="record-header">
+                                    <span class="record-date">{{ record['submitted_at'] }}</span>
+                                    <span class="badge badge-{{ record['health_priority'].lower() }}">
+                                        {{ record['health_priority'] }} Priority
+                                    </span>
+                                </div>
+                                <div class="record-details">
+                                    <p><strong>Age:</strong> {{ record['age'] }} | 
+                                       <strong>Gender:</strong> {{ record['gender'] }}</p>
+                                    <p><strong>Symptoms:</strong> {{ record['symptoms'] }}</p>
+                                    {% if record['file_name'] %}
+                                        <p><strong>File:</strong> {{ record['file_name'] }}</p>
+                                    {% endif %}
+                                </div>
+                                <div class="ai-summary">
+                                    <h4>AI Analysis Summary</h4>
+                                    <p>{{ record['ai_summary'] }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="empty-state">No medical records yet. Submit your first report above.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
