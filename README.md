@@ -1,0 +1,2 @@
+# medico
+ai and human 
